@@ -1,0 +1,11 @@
+fastapi
+uvicorn
+motor
+python-dotenv
+python-multipart
+passlib==1.7.4
+bcrypt==4.1.3
+python-jose[cryptography]
+pydantic-settings
+
+# Cómo instalar todo correctamente:  pip install -r requirements.txt
