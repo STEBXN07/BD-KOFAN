@@ -1,0 +1,188 @@
+{
+  "database": "kofan_reservas",
+  "version": "3.0.0",
+  "description": "Sistema de Reservas de Eventos - Hotel Kofán",
+  "collections": [
+
+    {
+      "name": "roles",
+      "description": "Roles del sistema",
+      "schema": {
+        "_id": "ObjectId",
+        "nombre": "string (único)",
+        "permisos": ["string"],
+        "created_at": "ISODate"
+      }
+    },
+
+    {
+      "name": "usuarios",
+      "description": "Personal del hotel",
+      "schema": {
+        "_id": "ObjectId",
+        "nombre_completo": "string (requerido)",
+        "email": "string (requerido, único)",
+        "telefono": "string",
+        "username": "string (requerido, único)",
+        "password_hash": "string (requerido)",
+        "rol_id": "ObjectId (ref roles)",
+        "activo": "boolean (default: true)",
+        "ultimo_login": "ISODate",
+        "created_at": "ISODate",
+        "updated_at": "ISODate"
+      }
+    },
+
+    {
+      "name": "clientes",
+      "description": "Clientes que realizan reservas",
+      "schema": {
+        "_id": "ObjectId",
+        "nombre_completo": "string (requerido)",
+        "tipo_documento": "string (CC, CE, PASAPORTE, TI, RC, NIT)",
+        "numero_documento": "string (requerido)",
+        "telefono": "string",
+        "email": "string (único)",
+        "pais": "string",
+        "ciudad": "string",
+        "fecha_nacimiento": "ISODate",
+        "created_at": "ISODate",
+        "updated_at": "ISODate"
+      }
+    },
+
+    {
+      "name": "tipo_evento",
+      "description": "Tipos de evento disponibles",
+      "schema": {
+        "_id": "ObjectId",
+        "nombre_evento": "string (requerido)",
+        "precio_base": "number",
+        "created_at": "ISODate"
+      }
+    },
+
+    {
+      "name": "espacios",
+      "description": "Espacios físicos para eventos",
+      "schema": {
+        "_id": "ObjectId",
+        "nombre": "string (requerido)",
+        "aforo_maximo": "number",
+        "descripcion": "string",
+        "estado": "string (DISPONIBLE, OCUPADO, MANTENIMIENTO)",
+        "created_at": "ISODate",
+        "updated_at": "ISODate"
+      }
+    },
+
+    {
+      "name": "servicios",
+      "description": "Servicios e implementos",
+      "schema": {
+        "_id": "ObjectId",
+        "nombre": "string",
+        "descripcion": "string",
+        "costo": "number",
+        "costo_por_dia": "number",
+        "disponibilidad": "number",
+        "estado": "string (ACTIVO, INACTIVO)",
+        "created_at": "ISODate"
+      }
+    },
+
+    {
+      "name": "cotizaciones",
+      "description": "Cotizaciones previas a reserva",
+      "schema": {
+        "_id": "ObjectId",
+        "cliente_id": "ObjectId (ref clientes)",
+        "usuario_cotizador_id": "ObjectId (ref usuarios)",
+        "fecha_inicio": "ISODate",
+        "fecha_finalizacion": "ISODate",
+        "estado": "string (BORRADOR, PENDIENTE, APROBADA, RECHAZADA)",
+        "total": "number",
+        "observaciones": "string",
+        "created_at": "ISODate"
+      }
+    },
+
+    {
+      "name": "reservas",
+      "description": "Reservas confirmadas de eventos",
+      "schema": {
+        "_id": "ObjectId",
+        "cotizacion_id": "ObjectId (ref cotizaciones)",
+        "cliente": {
+          "_id": "ObjectId",
+          "nombre": "string"
+        },
+        "usuario_responsable": {
+          "_id": "ObjectId",
+          "nombre": "string"
+        },
+        "espacio": {
+          "_id": "ObjectId",
+          "nombre": "string"
+        },
+        "evento": {
+          "_id": "ObjectId",
+          "descripcion": "string",
+          "fecha_evento": "ISODate",
+          "hora_evento": "string",
+          "cantidad_asistentes": "number"
+        },
+        "estado_reserva": "string (CONFIRMADA, PENDIENTE, CANCELADA)",
+        "observaciones": "string",
+        "servicios": [
+          {
+            "_id": "ObjectId",
+            "nombre": "string",
+            "cantidad": "number",
+            "estado": "string (SOLICITADO, APLICADO, CANCELADO)"
+          }
+        ],
+        "created_at": "ISODate"
+      }
+    },
+
+    {
+      "name": "facturas",
+      "description": "Facturación asociada a reserva",
+      "schema": {
+        "_id": "ObjectId",
+        "reserva_id": "ObjectId (ref reservas)",
+        "numero_factura": "string (único)",
+        "fecha_emision": "ISODate",
+        "valor_total": "number",
+        "valor_pagado": "number",
+        "estado": "string (PAGADA, PENDIENTE, VENCIDA)",
+        "pagos": [
+          {
+            "_id": "ObjectId",
+            "monto": "number",
+            "fecha_pago": "ISODate",
+            "metodo_pago": "string (EFECTIVO, TRANSFERENCIA, TARJETA, NEQUI, DAVIPLATA)",
+            "estado": "string (PAGADO, PENDIENTE, VENCIDO, REEMBOLSO)"
+          }
+        ],
+        "created_at": "ISODate"
+      }
+    },
+
+    {
+      "name": "reportes",
+      "description": "Reportes generados por usuarios",
+      "schema": {
+        "_id": "ObjectId",
+        "usuario_id": "ObjectId (ref usuarios)",
+        "fecha_inicio": "ISODate",
+        "fecha_finalizacion": "ISODate",
+        "tipo_reporte": "string",
+        "contenido": "string",
+        "created_at": "ISODate"
+      }
+    }
+
+  ]
+}
