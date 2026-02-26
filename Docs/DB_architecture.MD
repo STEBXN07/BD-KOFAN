@@ -23,7 +23,7 @@ La base se crea automáticamente cuando se insertan datos desde el backend.
 Trabajamos en MongoDB Atlas (remoto).
 
 Cada desarrollador debe:
-
+ 
 1. Tener el archivo `.env`
 2. Tener configurado `MONGO_URI`
 3. Conectarse al mismo cluster
