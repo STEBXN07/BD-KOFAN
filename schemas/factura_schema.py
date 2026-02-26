@@ -16,12 +16,14 @@ from pydantic import BaseModel, Field
 
 
 class EstadoFactura(str, Enum):
+    """Estados de la factura según DB_architecture.json."""
     PAGADA = "PAGADA"
     PENDIENTE = "PENDIENTE"
     VENCIDA = "VENCIDA"
 
 
 class EstadoPago(str, Enum):
+    """Estados de cada pago (subdocumento)."""
     PAGADO = "PAGADO"
     PENDIENTE = "PENDIENTE"
     VENCIDO = "VENCIDO"
@@ -29,6 +31,7 @@ class EstadoPago(str, Enum):
 
 
 class MetodoPago(str, Enum):
+    """Métodos de pago permitidos (DB_architecture.json)."""
     EFECTIVO = "EFECTIVO"
     TRANSFERENCIA = "TRANSFERENCIA"
     TARJETA = "TARJETA"
@@ -44,14 +47,17 @@ class PagoBase(BaseModel):
 
 
 class PagoCreate(PagoBase):
+    """Schema para crear un pago (se embebe en factura)."""
     pass
 
 
 class PagoResponse(PagoBase):
+    """Pago serializado para respuesta (incluye id)."""
     id: str
 
 
 class PagoEstadoUpdate(BaseModel):
+    """Solo el campo estado para actualizar un pago."""
     estado: EstadoPago
 
 
@@ -64,10 +70,12 @@ class FacturaBase(BaseModel):
 
 
 class FacturaCreate(FacturaBase):
+    """Schema para crear una nueva factura."""
     pass
 
 
 class FacturaUpdate(BaseModel):
+    """Actualización parcial; todos los campos opcionales."""
     reserva_id: Optional[str] = Field(None, min_length=1)
     numero_factura: Optional[str] = Field(None, min_length=1)
     fecha_emision: Optional[datetime] = None

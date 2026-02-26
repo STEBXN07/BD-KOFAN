@@ -39,17 +39,23 @@ from validations.factura_validations import (
 router = APIRouter(
     prefix="/facturas",
     tags=["Facturas"],
-    dependencies=[Depends(get_current_user)],
+    dependencies=[Depends(get_current_user)],  # Token JWT obligatorio en todas las rutas
 )
 
 
+# ================== GET ==================
+# Lectura de facturas (requiere token)
+# =========================================
+
 @router.get("/", status_code=status.HTTP_200_OK)
 def listar_facturas():
+    """Lista todas las facturas."""
     return get_all_facturas()
 
 
 @router.get("/{factura_id}", status_code=status.HTTP_200_OK)
 def obtener_factura(factura_id: str):
+    """Obtiene una factura por ID. 404 si no existe."""
     try:
         require_valid_object_id(factura_id, "factura_id")
     except ValueError as e:
@@ -60,13 +66,19 @@ def obtener_factura(factura_id: str):
     return factura
 
 
+# ================== POST ==================
+# Crear factura y agregar pagos
+# ==========================================
+
 @router.post("/", status_code=status.HTTP_201_CREATED)
 def crear_factura(data: FacturaCreate):
+    """Crea factura. 409 si numero_factura ya existe."""
     try:
         require_valid_object_id(data.reserva_id, "reserva_id")
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
 
+    # Validar unicidad de numero_factura (DB_architecture.json)
     existing = get_factura_by_numero(data.numero_factura)
     if existing:
         raise HTTPException(
@@ -79,8 +91,27 @@ def crear_factura(data: FacturaCreate):
     return create_factura(payload)
 
 
+@router.post("/{factura_id}/pagos", status_code=status.HTTP_201_CREATED)
+def agregar_pago(factura_id: str, data: PagoCreate):
+    """Añade un pago al array embebido de la factura."""
+    try:
+        require_valid_object_id(factura_id, "factura_id")
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+
+    factura = add_pago_to_factura(factura_id, data.dict())
+    if not factura:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Factura no encontrada")
+    return factura
+
+
+# ================== PUT ==================
+# Actualizar factura y estado de pagos
+# =========================================
+
 @router.put("/{factura_id}", status_code=status.HTTP_200_OK)
 def actualizar_factura(factura_id: str, data: FacturaUpdate):
+    """Actualización parcial. 400 body vacío, 409 numero_factura duplicado."""
     try:
         require_valid_object_id(factura_id, "factura_id")
     except ValueError as e:
@@ -113,38 +144,9 @@ def actualizar_factura(factura_id: str, data: FacturaUpdate):
     return updated
 
 
-@router.delete("/{factura_id}", status_code=status.HTTP_204_NO_CONTENT)
-def eliminar_factura(factura_id: str, _user=Depends(require_admin)):
-    try:
-        require_valid_object_id(factura_id, "factura_id")
-    except ValueError as e:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
-    ok = delete_factura(factura_id)
-    if not ok:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Factura no encontrada")
-    return None
-
-
-# -----------------------------------------------------------------------------
-# Pagos (subdocumentos dentro de facturas)
-# -----------------------------------------------------------------------------
-
-
-@router.post("/{factura_id}/pagos", status_code=status.HTTP_201_CREATED)
-def agregar_pago(factura_id: str, data: PagoCreate):
-    try:
-        require_valid_object_id(factura_id, "factura_id")
-    except ValueError as e:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
-
-    factura = add_pago_to_factura(factura_id, data.dict())
-    if not factura:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Factura no encontrada")
-    return factura
-
-
 @router.put("/{factura_id}/pagos/{pago_id}/estado", status_code=status.HTTP_200_OK)
 def actualizar_estado_pago_endpoint(factura_id: str, pago_id: str, data: PagoEstadoUpdate):
+    """Actualiza solo el estado de un pago existente."""
     try:
         require_valid_object_id(factura_id, "factura_id")
         require_valid_object_id(pago_id, "pago_id")
@@ -159,8 +161,24 @@ def actualizar_estado_pago_endpoint(factura_id: str, pago_id: str, data: PagoEst
     return result
 
 
-@router.delete("/{factura_id}/pagos/{pago_id}", status_code=status.HTTP_204_NO_CONTENT)
-def eliminar_pago(factura_id: str, pago_id: str, _user=Depends(require_admin)):
+# ================== DELETE ==================
+# Eliminar factura y pagos (solo admin)
+# ============================================
+
+@router.delete("/{factura_id}", status_code=status.HTTP_200_OK)
+def eliminar_factura(factura_id: str, _user=Depends(require_admin)):  # Solo admin
+    try:
+        require_valid_object_id(factura_id, "factura_id")
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+    ok = delete_factura(factura_id)
+    if not ok:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Factura no encontrada")
+    return {"message": "Factura eliminada"}
+
+
+@router.delete("/{factura_id}/pagos/{pago_id}", status_code=status.HTTP_200_OK)
+def eliminar_pago(factura_id: str, pago_id: str, _user=Depends(require_admin)):  # Solo admin
     try:
         require_valid_object_id(factura_id, "factura_id")
         require_valid_object_id(pago_id, "pago_id")
@@ -172,4 +190,4 @@ def eliminar_pago(factura_id: str, pago_id: str, _user=Depends(require_admin)):
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Factura no encontrada")
     if result == {}:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Pago no encontrado")
-    return None
+    return {"message": "Pago eliminado"}
