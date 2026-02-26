@@ -1,12 +1,12 @@
-fastapi
-uvicorn
-motor
-pymongo
-python-dotenv
-python-multipart
+fastapi==0.133.1
+uvicorn==0.41.0
+pymongo==4.16.0
+python-dotenv==1.2.1
+python-multipart==0.0.22
 passlib==1.7.4
-bcrypt==4.1.3
-python-jose[cryptography]
-pydantic-settings
+bcrypt==4.0.1
+python-jose[cryptography]==3.5.0
+pydantic-settings==2.13.1
 
-# Cómo instalar todo correctamente:  pip install -r requirements.txt
+# Instalar:  pip install -r requirements.txt
+# Recuerda crear yactivar el entorno virtual: 
