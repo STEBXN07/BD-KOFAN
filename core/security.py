@@ -29,7 +29,7 @@ def create_access_token(data: dict) -> str:
     to_encode.update({
         "exp": expire, 
         "type": "access",
-        "iat": datetime.now(timezone.utc)  # issued at
+        "iat": datetime.now(timezone.utc)
     })
     return jwt.encode(to_encode, SECRET, algorithm=ALGORITHM)
 
@@ -40,6 +40,6 @@ def create_refresh_token(data: dict) -> str:
     to_encode.update({
         "exp": expire, 
         "type": "refresh",
-        "iat": datetime.now(timezone.utc)  # issued at
+        "iat": datetime.now(timezone.utc)
     })
     return jwt.encode(to_encode, SECRET, algorithm=ALGORITHM)
