@@ -9,6 +9,7 @@ db = cliente["ecohotel_kofan_db"]
 
 """
 
+
 #
 from pymongo import MongoClient
 
