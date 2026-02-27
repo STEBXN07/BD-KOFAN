@@ -10,7 +10,7 @@ Documentación: /docs, /redoc.
 """
 from fastapi import FastAPI
 
-from routers import auth, clientes, facturas, salones, users
+from routers import auth, clientes, cotizaciones, facturas, salones, users
 
 # -----------------------------------------------------------------------------
 # Aplicación FastAPI
@@ -31,4 +31,5 @@ app.include_router(salones.router)
 app.include_router(auth.router)
 app.include_router(users.router)
 app.include_router(clientes.router)
+app.include_router(cotizaciones.router)
 app.include_router(facturas.router)
