@@ -1,10 +1,10 @@
 from fastapi import APIRouter, HTTPException
+from datetime import datetime, timedelta # <--- ESTA ES LA LÍNEA QUE TE FALTA
 from db.client import db
 from schemas.salon_schema import Salon, Reserva
 from bson import ObjectId
 
 router = APIRouter(prefix="/eventos", tags=["eventos"])
-
 # --- GESTIÓN DE SALONES ---
 
 # 1. Crear un Salón nuevo (Para que tengas Salón 1 y Salón 2)
@@ -27,30 +27,42 @@ async def listar_salones():
 
 # --- GESTIÓN DE RESERVAS (CALENDARIO) ---
 
-# 3. Guardar una Reserva (Bloquear fecha)
 @router.post("/reservar")
 async def crear_reserva(reserva: Reserva):
-    nueva_reserva = dict(reserva)
-    del nueva_reserva["id"]
+    # 1. Verificar si ya hay una reserva para ese salón en esa fecha
+    existe = db.reservas.find_one({
+        "salon_id": reserva.salon_id,
+        "fecha_inicio": reserva.fecha_inicio
+    })
     
-    # Aquí podrías validar si ya existe fecha (opcional por ahora)
+    if existe:
+        raise HTTPException(status_code=400, detail="Esta fecha ya está ocupada para este salón.")
+
+    nueva_reserva = dict(reserva)
+    if "id" in nueva_reserva: del nueva_reserva["id"]
+    
     id = db.reservas.insert_one(nueva_reserva).inserted_id
     return {"mensaje": "Fecha reservada con éxito", "id": str(id)}
 
-# 4. 🔥 EL ENDPOINT DEL CALENDARIO 🔥
-# Este es el que tu Frontend llama para saber qué pintar de rojo
 @router.get("/ocupacion/{salon_id}")
 async def obtener_ocupacion(salon_id: str):
-    # Busca solo las reservas de ESE salón específico
-    reservas = db.reservas.find({"salon_id": salon_id})
+    # Buscamos solo reservas que NO estén canceladas o expiradas
+    reservas = db.reservas.find({
+        "salon_id": salon_id,
+        "estado": {"$ne": "expirada"} # Solo trae las pendientes o confirmadas
+    })
     
     lista = []
     for r in reservas:
+        # Si está confirmada la ponemos verde, si está pendiente (menos de 24h) roja
+        color_evento = "green" if r.get("estado") == "confirmado" else "red"
+        
         lista.append({
-            "title": r["nombre_evento"], # "title" suele usarlo FullCalendar
+            "id": str(r["_id"]),
+            "title": r["nombre_evento"],
             "start": r["fecha_inicio"],
             "end": r["fecha_fin"],
-            "color": "red" # Para que salga rojo en el calendario
+            "color": color_evento 
         })
     return lista
 
@@ -70,3 +82,15 @@ async def borrar_reserva(id_reserva: str): # <--- CAMBIO 1: Ahora dice "str"
             
     except Exception as e:
         return {"error": "El ID que mandaste no tiene formato válido de Mongo."}
+    
+# Lógica sugerida para el servicio de facturas
+async def limpiar_reservas_expiradas():
+    ahora = datetime.utcnow()
+    limite = ahora - timedelta(hours=24)
+    
+    # Buscamos reservas 'pendientes' creadas hace más de 24h
+    resultado = await db.reservas.update_many(
+        {"estado": "pendiente", "fecha_creacion": {"$lt": limite}},
+        {"$set": {"estado": "expirada"}}
+    )
+    return resultado.modified_count
