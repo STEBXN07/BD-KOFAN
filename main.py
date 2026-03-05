@@ -11,6 +11,7 @@ Documentación: /docs, /redoc.
 from fastapi import FastAPI
 
 from routers import auth, clientes, cotizaciones, facturas, salones, users
+from routers.tipo_evento import router as tipo_evento_router
 
 # -----------------------------------------------------------------------------
 # Aplicación FastAPI
@@ -33,3 +34,4 @@ app.include_router(users.router)
 app.include_router(clientes.router)
 app.include_router(cotizaciones.router)
 app.include_router(facturas.router)
+app.include_router(tipo_evento_router)
