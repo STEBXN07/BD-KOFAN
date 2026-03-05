@@ -1,33 +1,24 @@
 """
 Schemas Pydantic para Tipo Evento.
 
-Basado en DB_architecture.json:
-- tipo_evento: nombre_evento, precio_base, created_at
+Basado en DB_architecture.json (colección tipo_evento):
+  _id, nombre_evento, descripcion, precio_base, activo, created_at, updated_at.
 """
 
 from __future__ import annotations
-from datetime import datetime
+
 from typing import Optional
+
 from pydantic import BaseModel, Field
-from enum import Enum
-
-
-class NombreEvento(str, Enum):
-    boda = "Boda"
-    reunion = "Reunion"
-    reunion_familiar = "Reunion Familiar"
 
 
 class TipoEventoCreate(BaseModel):
-    nombre_evento: NombreEvento
-    descripcion: Optional[str] = None
-    precio_base: float = Field(
-        ...,
-        gt=0
-    )
+    nombre_evento: str = Field(..., min_length=1, max_length=100, description="Nombre del tipo de evento")
+    descripcion: Optional[str] = Field(None, max_length=255)
+    precio_base: float = Field(..., gt=0)
 
 
 class TipoEventoUpdate(BaseModel):
-    nombre_evento: Optional[NombreEvento] = None
-    descripcion: Optional[str] = None
+    nombre_evento: Optional[str] = Field(None, min_length=1, max_length=100)
+    descripcion: Optional[str] = Field(None, max_length=255)
     precio_base: Optional[float] = Field(None, gt=0)

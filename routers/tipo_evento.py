@@ -9,7 +9,7 @@ Requisitos:
 
 from __future__ import annotations
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Response, status
 
 from dependencies.auth import get_current_user, require_admin
 from schemas.tipo_evento_schema import TipoEventoCreate, TipoEventoUpdate
@@ -29,7 +29,7 @@ from validations.factura_validations import (
 router = APIRouter(
     prefix="/tipo-evento",
     tags=["Tipo Evento"],
-    #dependencies=[Depends(get_current_user)],  # 🔐 JWT obligatorio
+    dependencies=[Depends(get_current_user)],
 )
 
 
@@ -67,15 +67,18 @@ def obtener_tipo_evento(tipo_evento_id: str):
 @router.post("/", status_code=status.HTTP_201_CREATED)
 def crear_tipo_evento(data: TipoEventoCreate):
     """Crea un nuevo tipo de evento."""
-    payload = data.dict()
-    return create_tipo_evento(payload)
+    payload = data.model_dump()
+    try:
+        return create_tipo_evento(payload)
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(e))
 
 
-# ================== PUT ==================
-# Actualizar tipo de evento
-# =========================================
+# ================== PATCH ==================
+# Actualizar tipo de evento (parcial)
+# ===========================================
 
-@router.put("/{tipo_evento_id}", status_code=status.HTTP_200_OK)
+@router.patch("/{tipo_evento_id}", status_code=status.HTTP_200_OK)
 def actualizar_tipo_evento(tipo_evento_id: str, data: TipoEventoUpdate):
     """Actualización parcial."""
     try:
@@ -83,14 +86,17 @@ def actualizar_tipo_evento(tipo_evento_id: str, data: TipoEventoUpdate):
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
 
-    payload = data.dict(exclude_unset=True)
+    payload = data.model_dump(exclude_unset=True)
 
     try:
         require_non_empty_update(payload)
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
 
-    updated = update_tipo_evento(tipo_evento_id, payload)
+    try:
+        updated = update_tipo_evento(tipo_evento_id, payload)
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(e))
     if not updated:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -103,7 +109,7 @@ def actualizar_tipo_evento(tipo_evento_id: str, data: TipoEventoUpdate):
 # Solo admin
 # ============================================
 
-@router.delete("/{tipo_evento_id}", status_code=status.HTTP_200_OK)
+@router.delete("/{tipo_evento_id}", status_code=status.HTTP_204_NO_CONTENT)
 def eliminar_tipo_evento(
     tipo_evento_id: str,
     _user=Depends(require_admin),  # 🔐 Solo admin
@@ -119,4 +125,4 @@ def eliminar_tipo_evento(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Tipo de evento no encontrado",
         )
-    return {"message": "Tipo de evento eliminado"}
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
