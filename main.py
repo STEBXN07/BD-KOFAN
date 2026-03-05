@@ -12,6 +12,7 @@ from fastapi import FastAPI
 
 from routers import auth, clientes, cotizaciones, facturas, salones, users
 from routers.tipo_evento import router as tipo_evento_router
+from services.tipo_evento_service import seed_tipos_evento
 
 # -----------------------------------------------------------------------------
 # Aplicación FastAPI
@@ -23,6 +24,13 @@ app = FastAPI(
     docs_url="/docs",
     redoc_url="/redoc",
 )
+
+
+# Inicializa los tipos de evento predefinidos en la base de datos al arrancar el servidor
+@app.on_event("startup")
+def startup_seed_tipos_evento():
+    """Carga catálogo base de tipos de evento al iniciar."""
+    seed_tipos_evento()
 
 # -----------------------------------------------------------------------------
 # Routers (orden: recursos, auth/users para login, luego clientes)

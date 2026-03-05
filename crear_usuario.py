@@ -16,6 +16,7 @@ from core.security import hash_password
 
 # Usuario que se creará (puedes cambiar estos valores)
 USERNAME = "admin"
+EMAIL = "admin@kofan.com"
 PASSWORD = "admin123"   # Contraseña en texto claro; se guardará hasheada
 ROLE = "admin"
 
@@ -33,6 +34,7 @@ def main():
 
     nuevo_usuario = {
         "username": USERNAME,
+        "email": EMAIL,
         "password": password_hasheada,
         "role": ROLE,
     }
@@ -42,6 +44,7 @@ def main():
     print()
     print("Para hacer login usa:")
     print(f"  Username: {USERNAME}")
+    print(f"  Email:    {EMAIL}")
     print(f"  Password: {PASSWORD}")
     print()
     print("1. POST http://127.0.0.1:8000/auth/login")
