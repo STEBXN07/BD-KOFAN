@@ -9,7 +9,6 @@ Arquitectura: main.py → core (config, security) → db → routers + services 
 Documentación: /docs, /redoc.
 """
 from fastapi import FastAPI
-
 from routers import auth, clientes, cotizaciones, facturas, salones, users
 
 # -----------------------------------------------------------------------------
@@ -25,11 +24,10 @@ app = FastAPI(
 
 # -----------------------------------------------------------------------------
 # Routers (orden: recursos, auth/users para login, luego clientes)
-# -----------------------------------------------------------------------------
-
-app.include_router(salones.router)
+# ----------------------------------------------------------------------------
 app.include_router(auth.router)
 app.include_router(users.router)
 app.include_router(clientes.router)
+app.include_router(salones.router)
 app.include_router(cotizaciones.router)
 app.include_router(facturas.router)
