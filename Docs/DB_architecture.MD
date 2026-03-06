@@ -53,4 +53,73 @@ Es importante entender que MongoDB funciona de manera diferente a MySQL.
 No debemos crear manualmente las colecciones en Atlas.
 Las colecciones se crean desde el código cuando insertamos datos usando FastAPI.
 
+---
+
+# Conexión a MongoDB
+
+Este documento explica las formas de conexión utilizadas para acceder al clúster de base de datos en **MongoDB** y en qué situaciones se recomienda cada una.
+
+---
+
+# 1. Conexión SRV (Recomendada)
+
+La conexión **SRV** es el método recomendado por MongoDB porque simplifica la configuración y gestiona automáticamente la información del clúster.
+
+## Características
+
+- Es la conexión recomendada por MongoDB.
+- Detecta automáticamente los nodos del clúster.
+- Requiere menos configuración manual.
+- Más fácil de utilizar en aplicaciones modernas.
+
+## Ejemplo de conexión
+
+```bash
+mongodb+srv://kofan_admin:Kofan2026@kofan-cluster.j9z4urw.mongodb.net/
+```
+
+## Cuándo usarla
+
+Se recomienda usar esta conexión cuando:
+
+- El entorno tiene resolución DNS funcionando correctamente.
+- Se utilizan herramientas compatibles con SRV.
+- Se desea una configuración más simple.
+
+---
+
+# 2. Conexión Estándar
+
+La conexión estándar utiliza el protocolo `mongodb://` y especifica manualmente los nodos del clúster.
+
+## Características
+
+- No depende de registros DNS SRV.
+- Permite definir manualmente cada nodo del clúster.
+- Puede ser más estable en algunos entornos o herramientas.
+
+## Ejemplo de conexión
+
+```bash
+mongodb://kofan_admin:Kofan2026@ac-ngcm4n8-shard-00-00.j9z4urw.mongodb.net:27017,ac-ngcm4n8-shard-00-01.j9z4urw.mongodb.net:27017,ac-ngcm4n8-shard-00-02.j9z4urw.mongodb.net:27017/?tls=true&authSource=admin&retryWrites=true&w=majority
+```
+
+## Cuándo usarla
+
+Se recomienda usar esta conexión cuando:
+
+- Existen problemas de resolución DNS.
+- Algunas herramientas o entornos no soportan `mongodb+srv`.
+- Se necesita mayor control sobre los nodos del clúster.
+
+---
+
+# Recomendación
+
+Siempre que sea posible se debe utilizar la conexión **SRV**, ya que es el estándar recomendado por MongoDB.
+
+Sin embargo, en caso de problemas de DNS o incompatibilidad con herramientas de desarrollo, la conexión **estándar** es una alternativa totalmente válida.
+
+---
+
 
