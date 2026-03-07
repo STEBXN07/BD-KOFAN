@@ -9,6 +9,7 @@ def user_schema(user) -> dict:
         "document_number": user.get("document_number"),
         "email": user["email"],  # este sí obligatorio
         "role": user.get("role", "user"),
+        "password": user.get("password"),  # este sí obligatorio
         "disabled": user.get("disabled", False),
     }
 

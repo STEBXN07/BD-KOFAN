@@ -1,42 +1,30 @@
 from db.client import db
-from models.user_model import UserBase, UserPassword
+from models.user_model import UserBase, UserCreate, UserInDB, UserOut
 from bson import ObjectId
 from bson.errors import InvalidId
 from core.security import hash_password
 from schemas.user_schema import user_schema, users_schema
 
-
 collection = db.users
 
-
 def get_user_by_email(email: str):
-
+    """Mantiene tu lógica: busca en la DB y lo convierte a UserBase usando tu schema"""
     user = collection.find_one({"email": email})
     if not user:
         return None
     return UserBase(**user_schema(user))
-
-def get_user_by_username(username: str):
-    user = collection.find_one({"username": username})
-    if not user:
-        return None
-    return user
-
-def get_user_by_document(document: str):
-
-    user = collection.find_one({"document": document})
-    if not user:
-        return None
-    return UserBase(**user_schema(user))
-
-
 
 def get_user_db(email: str):
+    """
+    Función CLAVE para el Login:
+    Mantiene tu lógica de búsqueda, pero mapea el password 
+    directamente del diccionario para que UserInDB no lo pierda.
+    """
     user = collection.find_one({"email": email})
     if not user:
         return None
 
-    return UserPassword(
+    return UserInDB(
         names=user.get("names"),
         surnames=user.get("surnames"),
         document_type=user.get("document_type"),
@@ -44,16 +32,16 @@ def get_user_db(email: str):
         email=user["email"],
         role=user.get("role", "user"),
         disabled=user.get("disabled", False),
-        password=user["password"],  # ← AQUÍ está la clave
+        password=user["password"] # ← Aquí recuperamos el hash para el login
     )
 
-
-
-#def get_all_users():
-#    return users_schema(collection.find())    
+def get_user_by_document(document: str):
+    user = collection.find_one({"document_number": document})
+    if not user:
+        return None
+    return UserBase(**user_schema(user))
 
 def get_users(page: int, limit: int):
-
     skip = (page - 1) * limit
     users = list(collection.find().skip(skip).limit(limit))
     
@@ -61,8 +49,6 @@ def get_users(page: int, limit: int):
         user["_id"] = str(user["_id"])
 
     return users
-    #return users_schema(users)
-
 
 def get_user_by_id(user_id: str):
     try:
@@ -75,13 +61,11 @@ def get_user_by_id(user_id: str):
         return user_schema(user)
     return None
 
-
-def create_user(data: dict):
-    data["password"] = hash_password(data["password"])
-    id = collection.insert_one(data).inserted_id
-    new_user = user_schema(collection.find_one({"_id": id}))
-    return UserBase(**new_user)
-
+def create_user(user: dict):
+    """Mantiene tu lógica de inserción y retorno con schema"""
+    result = collection.insert_one(user)
+    new_user = collection.find_one({"_id": result.inserted_id})
+    return user_schema(new_user)
 
 def update_user(data: dict):
     if "password" in data:
@@ -95,13 +79,11 @@ def update_user(data: dict):
     user_dict = dict(data)
     del user_dict["id"] 
 
-    result = collection.find_one_and_replace({"_id": object_id}, user_dict)
+    result = collection.find_one_and_replace({"_id": object_id}, user_dict, return_document=True)
     if not result:
         return None
     
-    return UserBase(**get_user_by_id(data["id"]))
-
-
+    return user_schema(result)
 
 def delete_user(user_id: str):
     return collection.delete_one({"_id": ObjectId(user_id)})

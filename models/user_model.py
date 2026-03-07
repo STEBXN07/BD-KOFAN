@@ -5,13 +5,21 @@ class UserBase(BaseModel):
     names: Optional[str] = None
     surnames: Optional[str] = None
     document_type: Optional[str] = None
-    document_number: Optional[str] = None 
-    email: str    
+    document_number: Optional[str] = None
+    email: str
     role: str = "user"
     disabled: bool = False
 
-class UserPassword(UserBase):
-    password: str   
+
+class UserCreate(UserBase):
+    password: str
+
+class UserInDB(UserBase):
+    password: str
+    
+
+class UserOut(UserBase):
+    id: Optional[str] = None
 
 class Token(BaseModel):
     access_token: str
