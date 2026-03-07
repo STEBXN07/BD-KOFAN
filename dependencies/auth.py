@@ -5,7 +5,7 @@ from fastapi.security import OAuth2PasswordBearer
 from jose import JWTError, jwt
 
 from core.config import ALGORITHM, SECRET
-from services.user_service import get_user_by_username
+from services.user_service import get_user_by_email
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
 
@@ -24,17 +24,20 @@ def get_current_user(token: str = Depends(oauth2_scheme)):
             raise credentials_exception
     except JWTError:
         raise credentials_exception
-    user = get_user_by_username(username)
+    user = get_user_by_email(username)
     if user is None:
         raise credentials_exception
     # No exponer credenciales y asegurar respuesta JSON-serializable (p. ej. /users/me)
-    out = copy(user)
-    out.pop("password", None)
-    out.pop("hashed_password", None)
-    if "_id" in out:
-        out["id"] = str(out["_id"])
-        del out["_id"]
-    return out
+    user_dict = dict(user)
+
+    user_dict.pop("password", None)
+    user_dict.pop("hashed_password", None)
+
+    if "_id" in user_dict:
+        user_dict["id"] = str(user_dict["_id"])
+        del user_dict["_id"]
+
+    return user_dict
 
 
 def require_admin(user: dict = Depends(get_current_user)):

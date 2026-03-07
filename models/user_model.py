@@ -1,11 +1,27 @@
-from bson import ObjectId
+from pydantic import BaseModel
+from typing import Optional
 
-def user_entity(item) -> dict:
-    return {
-        "id": str(item["_id"]),
-        "username": item["username"],
-        "email": item["email"],
-        "full_name": item["full_name"],
-        "roles": item["roles"],
-        "hashed_password": item["hashed_password"]
-    }
+class UserBase(BaseModel):
+    names: Optional[str] = None
+    surnames: Optional[str] = None
+    document_type: Optional[str] = None
+    document_number: Optional[str] = None
+    email: str
+    role: str = "user"
+    disabled: bool = False
+
+
+class UserCreate(UserBase):
+    password: str
+
+class UserInDB(UserBase):
+    password: str
+    
+
+class UserOut(UserBase):
+    id: Optional[str] = None
+
+class Token(BaseModel):
+    access_token: str
+    refresh_token: str
+    token_type: str = "bearer"
